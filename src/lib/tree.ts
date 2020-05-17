@@ -92,17 +92,15 @@ export class AnimationTreeNode {
     const originalState = this.states.get(this.currentState);
     const nextState = this.states.get(state);
 
-    try {
-      // TODO check if can play
-      if (true) {
-        const metadata = this.transitions.find(transitionName);
+    // TODO check if can play
+    if (true) {
+      const metadata = this.transitions.find(transitionName);
 
+      if (metadata) {
         metadata.forEach((m) => {
           this.playTransition(m, [originalState, nextState]);
         });
       }
-    } catch (_) {
-      // noop
     }
 
     this.currentState = state;
