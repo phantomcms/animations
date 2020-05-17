@@ -23,9 +23,9 @@ li {
 }
 
 li:hover {
-  background: #3DB3E1;
+  background: #3db3e1;
 }
 
 li:not(:last-child) {
-  border-bottom: 1px solid #3DB3E1;
+  border-bottom: 1px solid #3db3e1;
 }

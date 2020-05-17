@@ -4,7 +4,7 @@ import { AnimationTransitionStore } from './transition';
 export class AnimationTree {
   private static instance: AnimationTree;
 
-  private constructor() { }
+  private constructor() {}
 
   static getInstance() {
     if (!this.instance) {
@@ -27,7 +27,7 @@ export class AnimationTree {
     }
 
     this.nodes.set(element, node);
-    
+
     // create node relationships
     if (!this.currentNode) {
       // we've just started this tree, set current node to the node we just created
@@ -71,35 +71,35 @@ export class AnimationTreeNode {
   private currentState: string;
   private states = new Map<string | number, AnimationState>();
   private transitions = new AnimationTransitionStore();
-  
+
   public name: string;
   public complete: boolean;
   public children: AnimationTreeNode[] = [];
   public parent?: AnimationTreeNode;
 
-  constructor(public hostElement: HTMLElement) { }
+  constructor(public hostElement: HTMLElement) {}
 
   addState(name: string, state: AnimationState) {
     this.states.set(name, state);
   }
 
   addTransition(name: string, metadata: AnimationMetadata[]) {
-    this.transitions.set(name, metadata)
+    this.transitions.set(name, metadata);
   }
 
   trigger(state: string) {
-    const transitionName = `${this.currentState} => ${state}`
+    const transitionName = `${this.currentState} => ${state}`;
     const originalState = this.states.get(this.currentState);
     const nextState = this.states.get(state);
 
     try {
       // TODO check if can play
       if (true) {
-        const metadata = this.transitions.find(transitionName)
-        
-        metadata.forEach(m => {
-          this.playTransition(m, [ originalState, nextState ])
-        })
+        const metadata = this.transitions.find(transitionName);
+
+        metadata.forEach((m) => {
+          this.playTransition(m, [originalState, nextState]);
+        });
       }
     } catch (_) {
       // noop
@@ -108,21 +108,26 @@ export class AnimationTreeNode {
     this.currentState = state;
   }
 
-  private playTransition(metadata: AnimationMetadata, providedStates: AnimationState[]) {
-    const states = ((metadata && metadata.states ? metadata.states : undefined) || providedStates).filter(x => !!x);
+  private playTransition(
+    metadata: AnimationMetadata,
+    providedStates: AnimationState[]
+  ) {
+    const states = (
+      (metadata && metadata.states ? metadata.states : undefined) ||
+      providedStates
+    ).filter((x) => !!x);
     const initialState = states[0];
 
     if (states.length) {
       Object.entries(initialState).forEach(([key, value]) => {
         this.hostElement.style.setProperty(key, `${value}`);
-      })
-  
+      });
+
       this.hostElement.animate(states, {
         fill: 'forwards',
-        ...metadata
-      })    
+        ...metadata,
+      });
     }
-
   }
 
   markAsComplete() {
@@ -132,4 +137,4 @@ export class AnimationTreeNode {
 
 export const getAnimationTree = () => {
   return AnimationTree.getInstance();
-}
+};

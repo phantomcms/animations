@@ -5,7 +5,7 @@ export interface AnimationTiming {
 }
 
 export interface AnimationState {
-  [key: string]: string | number
+  [key: string]: string | number;
 }
 
 export class AnimationMetadata {
@@ -13,7 +13,10 @@ export class AnimationMetadata {
   public delay: number;
   public easing: string;
 
-  constructor(timing: string | AnimationTiming, public states?: AnimationState[]) {
+  constructor(
+    timing: string | AnimationTiming,
+    public states?: AnimationState[]
+  ) {
     if (typeof timing === 'string') {
       timing = this.parseTiming(timing);
     }
@@ -42,12 +45,16 @@ export class AnimationMetadata {
       [duration, easing] = timingParts;
     }
 
-    return { duration: parseDuration(duration), delay: parseDuration(delay) || 0, easing };
+    return {
+      duration: parseDuration(duration),
+      delay: parseDuration(delay) || 0,
+      easing,
+    };
   }
 }
 
 function parseDuration(duration: string) {
-  let value = parseInt(duration);
+  let value = parseFloat(duration);
 
   if (!value) {
     return 0;
