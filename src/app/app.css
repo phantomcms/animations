@@ -1,0 +1,31 @@
+.panel {
+  font-family: sans-serif;
+  background: rgb(13, 160, 218);
+  color: white;
+  padding: 40px 0;
+  min-width: 400px;
+  position: fixed;
+  left: 0;
+  bottom: 0;
+  top: 0;
+}
+
+ul {
+  margin: 0;
+  padding: 0;
+}
+
+li {
+  padding: 20px 40px;
+  list-style-type: none;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+li:hover {
+  background: #3DB3E1;
+}
+
+li:not(:last-child) {
+  border-bottom: 1px solid #3DB3E1;
+}
