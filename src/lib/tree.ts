@@ -1,25 +1,25 @@
 import { AnimationMetadata, AnimationState } from './metadata';
 import { AnimationTransitionStore } from './transition';
 
-export class AnimationTree {
-  private static instance: AnimationTree;
+export class AnimationStore {
+  private static instance: AnimationStore;
 
   private constructor() {}
 
   static getInstance() {
     if (!this.instance) {
-      this.instance = new AnimationTree();
+      this.instance = new AnimationStore();
     }
 
     return this.instance;
   }
 
   isComplete: boolean;
-  private nodes: Map<HTMLElement, AnimationTreeNode> = new Map();
-  private currentNode: AnimationTreeNode;
+  private nodes: Map<HTMLElement, AnimationNode> = new Map();
+  private currentNode: AnimationNode;
 
   add(element: HTMLElement) {
-    const node = new AnimationTreeNode(element);
+    const node = new AnimationNode(element);
 
     if (this.isComplete) {
       // we're adding to a complete animation tree, reset it first
@@ -28,20 +28,21 @@ export class AnimationTree {
 
     this.nodes.set(element, node);
 
-    // create node relationships
-    if (!this.currentNode) {
-      // we've just started this tree, set current node to the node we just created
-      this.currentNode = node;
-    } else {
+    if (this.currentNode) {
       // this is an existing tree, define the new node's parent as the current node, and the new node as a child of the current node
       node.parent = this.currentNode;
       this.currentNode.children.push(node);
     }
 
+    this.currentNode = node;
+
+    console.log('down', element);
+
     return node;
   }
 
   complete() {
+    console.log('up');
     this.currentNode.markAsComplete();
 
     if (this.currentNode.parent) {
@@ -50,34 +51,34 @@ export class AnimationTree {
     } else {
       // else mark this tree as complete
       this.isComplete = true;
+
+      console.log('whee complete');
     }
   }
 
-  reset() {
-    this.currentNode = undefined;
-    this.nodes = new Map();
-  }
-
-  getNodeForElement(element: HTMLElement): AnimationTreeNode {
+  getNodeForElement(element: HTMLElement): AnimationNode {
     return this.nodes.get(element);
   }
 
-  getParentNodeForElement(element: HTMLElement): AnimationTreeNode {
+  getParentNodeForElement(element: HTMLElement): AnimationNode {
     return this.nodes.get(element).parent;
   }
 }
 
-export class AnimationTreeNode {
+export class AnimationNode {
   private currentState: string;
   private states = new Map<string | number, AnimationState>();
   private transitions = new AnimationTransitionStore();
 
+  public targetElement: HTMLElement;
   public name: string;
   public complete: boolean;
-  public children: AnimationTreeNode[] = [];
-  public parent?: AnimationTreeNode;
+  public parent?: AnimationNode;
+  public children: AnimationNode[] = [];
 
-  constructor(public hostElement: HTMLElement) {}
+  constructor(public containerElement: HTMLElement) {
+    this.targetElement = containerElement.children[0] as HTMLElement;
+  }
 
   addState(name: string, state: AnimationState) {
     this.states.set(name, state);
@@ -92,18 +93,24 @@ export class AnimationTreeNode {
     const originalState = this.states.get(this.currentState);
     const nextState = this.states.get(state);
 
-    // TODO check if can play
-    if (true) {
+    console.log('can animate', this.canAnimate);
+
+    if (this.canAnimate) {
       const metadata = this.transitions.find(transitionName);
 
-      if (metadata) {
-        metadata.forEach((m) => {
-          this.playTransition(m, [originalState, nextState]);
-        });
-      }
+      metadata.forEach((m) => {
+        this.playTransition(m, [originalState, nextState]);
+      });
     }
 
     this.currentState = state;
+  }
+
+  get canAnimate(): boolean {
+    return (
+      this.complete &&
+      (!this.parent || !this.parent.containerElement.getAnimations())
+    );
   }
 
   private playTransition(
@@ -118,10 +125,10 @@ export class AnimationTreeNode {
 
     if (states.length) {
       Object.entries(initialState).forEach(([key, value]) => {
-        this.hostElement.style.setProperty(key, `${value}`);
+        this.targetElement.style.setProperty(key, `${value}`);
       });
 
-      this.hostElement.animate(states, {
+      this.targetElement.animate(states, {
         fill: 'forwards',
         ...metadata,
       });
@@ -133,6 +140,6 @@ export class AnimationTreeNode {
   }
 }
 
-export const getAnimationTree = () => {
-  return AnimationTree.getInstance();
+export const animations = () => {
+  return AnimationStore.getInstance();
 };

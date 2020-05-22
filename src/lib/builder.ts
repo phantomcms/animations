@@ -1,4 +1,4 @@
-import { AnimationTreeNode } from './tree';
+import { AnimationNode } from './tree';
 import { AnimationMetadata, AnimationState } from './metadata';
 
 export class AnimationCompilationData {
@@ -7,30 +7,30 @@ export class AnimationCompilationData {
 }
 
 export type AnimationStep = (
-  node: AnimationTreeNode,
+  node: AnimationNode,
   data: AnimationCompilationData
 ) => any;
 
 // create
 export const trigger = (name: string, actions: AnimationStep[]) => {
-  return (node: AnimationTreeNode) => {
-    console.time('start trigger');
-    const { hostElement } = node;
+  return (node: AnimationNode) => {
+    console.time(`trigger ${name}`);
+    const { containerElement } = node;
 
     // set the name attribute for the container tag
-    hostElement.setAttribute('animation-name', name);
+    containerElement.setAttribute('animation-name', name);
 
     const data = new AnimationCompilationData();
 
     actions.forEach((action) => action(node, data));
 
-    console.timeEnd('start trigger');
+    console.timeEnd(`trigger ${name}`);
   };
 };
 
 export const transition = (name: string, actions: AnimationStep[]) => {
   return function transition(
-    node: AnimationTreeNode,
+    node: AnimationNode,
     data: AnimationCompilationData
   ) {
     const animations: AnimationMetadata[] = [];
@@ -74,12 +74,9 @@ export const transition = (name: string, actions: AnimationStep[]) => {
 
 export const state = (
   name: string,
-  actions: ((node: AnimationTreeNode, data: AnimationCompilationData) => any)[]
+  actions: ((node: AnimationNode, data: AnimationCompilationData) => any)[]
 ) => {
-  return function state(
-    node: AnimationTreeNode,
-    data: AnimationCompilationData
-  ) {
+  return function state(node: AnimationNode, data: AnimationCompilationData) {
     // check if data.styles is empty
     if (data.styles && data.styles.length) {
       console.error(
@@ -100,17 +97,17 @@ export const state = (
 };
 
 export const style = (styledata: AnimationState) => {
-  return function style(_: AnimationTreeNode, data: AnimationCompilationData) {
+  return function style(_: AnimationNode, data: AnimationCompilationData) {
     data.styles.push(styledata);
   };
 };
 
 export const animate = (
   timing: string,
-  style?: (node: AnimationTreeNode, data: AnimationCompilationData) => void
+  style?: (node: AnimationNode, data: AnimationCompilationData) => void
 ) => {
   return function animate(
-    node: AnimationTreeNode,
+    node: AnimationNode,
     data: AnimationCompilationData
   ): AnimationMetadata {
     if (style) {
@@ -122,7 +119,15 @@ export const animate = (
   };
 };
 
-export const query = () => {};
+export const query = (queryString: string, actions: AnimationStep[]) => {
+  return function query(node: AnimationNode, data: AnimationCompilationData) {
+    // parse query
+    const resultQuery = parseQuery(queryString);
+    const results = Array.from(
+      node.containerElement.querySelectorAll(resultQuery)
+    );
+  };
+};
 
 export const sequence = () => {};
 
@@ -132,7 +137,20 @@ export const group = () => {};
 export const stagger = () => {};
 
 // TODO animate child should receive a host element, query the tree for the corresponding AnimationTreeNode, and unlock that node
-export const animateChild = () => {};
+export const animateChild = () => {
+  return function animateChild(node: AnimationNode) {};
+};
+
+function parseQuery(query: string) {
+  // TODO handle querying for :enter and :leave states
+
+  // replace @ references to child animations
+  (query.match(/@[0-z_*-]+/gi) || []).map((match) => {
+    query = query.replace(match, `[animation-name='${match.substring(1)}']`);
+  });
+
+  return query;
+}
 
 function mapAliasToTransition(alias: string) {
   switch (alias) {

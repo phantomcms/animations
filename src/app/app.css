@@ -1,6 +1,6 @@
 .panel {
   font-family: sans-serif;
-  background: rgb(13, 160, 218);
+  background: linear-gradient(45deg, #3900be, #0b78dd);
   color: white;
   padding: 40px 0;
   min-width: 400px;
@@ -8,6 +8,7 @@
   left: 0;
   bottom: 0;
   top: 0;
+  box-shadow: 2px 0 12px 1px rgba(0, 0, 0, 0.2);
 }
 
 ul {
@@ -16,16 +17,17 @@ ul {
 }
 
 li {
-  padding: 20px 40px;
+  padding: 25px 40px;
   list-style-type: none;
   cursor: pointer;
   transition: all 0.2s ease;
+  text-transform: capitalize;
 }
 
 li:hover {
-  background: #3db3e1;
+  background: rgba(255, 255, 255, 0.2);
 }
 
 li:not(:last-child) {
-  border-bottom: 1px solid #3db3e1;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.2);
 }

@@ -1,19 +1,18 @@
 import { Component, Host, Element, Prop, h, Watch } from '@stencil/core';
-import { getAnimationTree, AnimationTreeNode } from './tree';
+import { animations, AnimationNode } from './tree';
 
 @Component({
   tag: 'animation-container',
-  shadow: true,
 })
 export class AnimationContainer {
   @Element() root: HTMLElement;
   host: HTMLElement;
 
-  @Prop() animation: (node: AnimationTreeNode) => any;
+  @Prop() animation: (node: AnimationNode) => any;
 
   @Prop() state: string = 'void';
 
-  node: AnimationTreeNode;
+  node: AnimationNode;
 
   @Watch('state')
   handleStateChange(state: string) {
@@ -21,16 +20,20 @@ export class AnimationContainer {
   }
 
   componentWillLoad() {
+    this.node = animations().add(this.root);
     this.host = this.root.children[0] as HTMLElement;
-
-    this.node = getAnimationTree().add(this.host);
-    this.animation(this.node);
 
     this.node.trigger('void');
   }
 
   componentDidLoad() {
-    getAnimationTree().complete();
+    // mark the tree as complete
+    animations().complete();
+
+    // the tree below this point is complete, compile animations
+    this.animation(this.node);
+
+    // this component has entered the view, trigger the enter state
     this.node.trigger('next');
   }
 
@@ -54,7 +57,7 @@ export class AnimationContainer {
     }, 0);
 
     // TODO animate nodes off
-    this.state = 'void';
+    this.node.trigger('void');
   }
 
   render() {
