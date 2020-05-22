@@ -21,11 +21,6 @@ export class AnimationStore {
   add(element: HTMLElement) {
     const node = new AnimationNode(element);
 
-    if (this.isComplete) {
-      // we're adding to a complete animation tree, reset it first
-      this.reset();
-    }
-
     this.nodes.set(element, node);
 
     if (this.currentNode) {
