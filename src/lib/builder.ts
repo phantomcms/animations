@@ -15,10 +15,10 @@ export type AnimationStep = (
 export const trigger = (name: string, actions: AnimationStep[]) => {
   return (node: AnimationNode) => {
     console.time(`trigger ${name}`);
-    const { containerElement } = node;
 
     // set the name attribute for the container tag
-    containerElement.setAttribute('animation-name', name);
+    node.containerElement.setAttribute('animation-name', name);
+    node.name = name;
 
     const data = new AnimationCompilationData();
 
@@ -126,6 +126,8 @@ export const query = (queryString: string, actions: AnimationStep[]) => {
     const results = Array.from(
       node.containerElement.querySelectorAll(resultQuery)
     );
+
+    console.log(results);
   };
 };
 

@@ -1,16 +1,20 @@
-import { Component, Host, Element, Prop, h, Watch } from '@stencil/core';
-import { animations, AnimationNode } from './tree';
+import { Component, Host, Element, Prop, h, Watch, State } from '@stencil/core';
+import { AnimationNode } from './tree';
 
 @Component({
   tag: 'animation-container',
+  shadow: true,
 })
 export class AnimationContainer {
   @Element() root: HTMLElement;
   host: HTMLElement;
+  parent: HTMLElement;
 
   @Prop() animation: (node: AnimationNode) => any;
 
   @Prop() state: string = 'void';
+
+  @State() loaded: boolean;
 
   node: AnimationNode;
 
@@ -20,47 +24,33 @@ export class AnimationContainer {
   }
 
   componentWillLoad() {
-    this.node = animations().add(this.root);
+    this.node = new AnimationNode(this.root);
     this.host = this.root.children[0] as HTMLElement;
+    this.parent = this.root.parentNode as HTMLElement;
 
+    // compile animations
+    this.animation(this.node);
+
+    // set initial void state
     this.node.trigger('void');
   }
 
   componentDidLoad() {
-    // mark the tree as complete
-    animations().complete();
-
-    // the tree below this point is complete, compile animations
-    this.animation(this.node);
-
     // this component has entered the view, trigger the enter state
     this.node.trigger('next');
   }
 
+  componentWillUnload() {
+    console.log('hi');
+  }
+
   componentDidUnload() {
-    const nodes = Array.from(this.host.childNodes);
-
-    // add nodes back to DOM
-    nodes.forEach((node) => {
-      this.host.appendChild(node);
-    });
-
-    // play any leave animations
-    // TODO play leave animations
-
-    // remove nodes from DOM when animations are complete
-    // TODO use action duration here
-    setTimeout(() => {
-      nodes.forEach((node) => {
-        this.host.parentNode.removeChild(node);
-      });
-    }, 0);
-
-    // TODO animate nodes off
+    // trigger void state to animate elements off
     this.node.trigger('void');
   }
 
   render() {
+    console.log('rendering');
     return (
       <Host>
         <slot></slot>
