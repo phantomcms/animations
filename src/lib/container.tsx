@@ -28,20 +28,16 @@ export class AnimationContainer {
     this.host = this.root.children[0] as HTMLElement;
     this.parent = this.root.parentNode as HTMLElement;
 
-    // compile animations
-    this.animation(this.node);
-
     // set initial void state
     this.node.trigger('void');
   }
 
   componentDidLoad() {
+    // compile animations
+    this.animation(this.node);
+
     // this component has entered the view, trigger the enter state
     this.node.trigger('next');
-  }
-
-  componentWillUnload() {
-    console.log('hi');
   }
 
   componentDidUnload() {
@@ -50,7 +46,6 @@ export class AnimationContainer {
   }
 
   render() {
-    console.log('rendering');
     return (
       <Host>
         <slot></slot>

@@ -1,9 +1,20 @@
 import { Component, Host, h, State } from '@stencil/core';
-import { trigger, animate, transition, style, state } from '../lib';
+import {
+  trigger,
+  animate,
+  transition,
+  style,
+  state,
+  query,
+  animateChild,
+} from '../lib';
 
 const panel = trigger('panel', [
   state('void', [style({ transform: 'translateX(-400px)' })]),
-  state('next', [style({ transform: 'translateX(0)' })]),
+  state('next', [
+    style({ transform: 'translateX(0)' }),
+    query('@menu', [animateChild()]),
+  ]),
   transition('void => next', [animate('350ms ease')]),
   transition('* => void', [animate('200ms ease')]),
 ]);

@@ -125,9 +125,9 @@ export const query = (queryString: string, actions: AnimationStep[]) => {
     const resultQuery = parseQuery(queryString);
     const results = Array.from(
       node.containerElement.querySelectorAll(resultQuery)
-    );
-
-    console.log(results);
+    ).map((element: HTMLElement) => {
+      const animationName = element.getAttribute('animation-name');
+    });
   };
 };
 
