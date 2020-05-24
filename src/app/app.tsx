@@ -7,6 +7,7 @@ import {
   state,
   query,
   animateChild,
+  stagger,
 } from '../lib';
 
 // const panel = trigger('panel', [
@@ -20,11 +21,31 @@ import {
 //   transition(':leave', [animate('200ms ease')]),
 // ]);
 
+// const panel = trigger('panel', [
+//   transition(':enter', [
+//     style({ transform: 'translateX(-400px)' }),
+//     animate('350ms ease', style({ transform: 'translateX(0)' })),
+//     query('@*', [animateChild()]),
+//   ]),
+//   transition(':leave', [
+//     style({ transform: 'translateX(0)' }),
+//     animate('250ms ease', style({ transform: 'translateX(-400px)' })),
+//   ]),
+// ]);
+
 const panel = trigger('panel', [
   transition(':enter', [
     style({ transform: 'translateX(-400px)' }),
     animate('350ms ease', style({ transform: 'translateX(0)' })),
-    query('@*', [animateChild()]),
+    query('li', [
+      style({ opacity: 0, transform: 'translateY(50px)' }),
+      stagger(80, [
+        animate(
+          '350ms 100ms ease',
+          style({ opacity: 1, transform: 'translateY(0)' })
+        ),
+      ]),
+    ]),
   ]),
   transition(':leave', [
     style({ transform: 'translateX(0)' }),
@@ -58,15 +79,15 @@ export class AppRoot {
         {this.shouldShow && (
           <animation-container animation={panel}>
             <div class="panel">
-              <animation-container animation={menu}>
-                <ul>
-                  <li>some menu item</li>
-                  <li>some other menu item</li>
-                  <li>short item</li>
-                  <li>thing one</li>
-                  <li>blue fish</li>
-                </ul>
-              </animation-container>
+              {/* <animation-container animation={menu}> */}
+              <ul>
+                <li>some menu item</li>
+                <li>some other menu item</li>
+                <li>short item</li>
+                <li>thing one</li>
+                <li>blue fish</li>
+              </ul>
+              {/* </animation-container> */}
             </div>
           </animation-container>
         )}

@@ -6,6 +6,7 @@ export class AnimationCompilationData {
   styles: AnimationState[] = [];
   states: Map<string, AnimationState> = new Map();
   timeline: AnimationTimeline;
+  currentStaggerOffset: number = 0;
 
   stateNames: [string, string];
 
@@ -148,22 +149,34 @@ export const query = (queryString: string, actions: AnimationStep[]) => {
   return function query(node: AnimationNode, data: AnimationCompilationData) {
     // parse query
     const resultQuery = parseQuery(queryString);
-    const results = Array.from(
-      node.containerElement.querySelectorAll(resultQuery)
-    ).map((element: HTMLElement) => {
-      const animationName = element.getAttribute('animation-name');
+    const childData = new AnimationCompilationData();
 
-      if (animationName) {
-        // use the animation node instead
-        const [action] = actions;
+    node.containerElement
+      .querySelectorAll(resultQuery)
+      .forEach((element: HTMLElement) => {
+        const animationName = element.getAttribute('animation-name');
 
-        const childNode = node.childAnimations.get(animationName);
+        if (animationName) {
+          // use the animation node instead
+          const [action] = actions;
 
-        if (action.name === 'animateChild') {
-          action(childNode, undefined);
+          const childNode = node.childAnimations.get(animationName);
+
+          if (action.name === 'animateChild') {
+            action(childNode, undefined);
+          }
+        } else {
+          const childNode = new AnimationNode(undefined, element);
+
+          actions
+            .map((action) => action(childNode, childData))
+            .map((metadata) => {
+              if (metadata instanceof AnimationMetadata) {
+                data.timeline.addMetadata(metadata);
+              }
+            });
         }
-      }
-    });
+      });
   };
 };
 
@@ -172,7 +185,20 @@ export const sequence = () => {};
 // TODO what does this do and do we need it?
 export const group = () => {};
 
-export const stagger = () => {};
+// TODO parse duration and allow strings
+export const stagger = (duration: number, actions: AnimationStep[]) => {
+  return function stagger(node: AnimationNode, data: AnimationCompilationData) {
+    const results = actions.map((action) => action(node, data));
+
+    for (let meta of results) {
+      if (meta instanceof AnimationMetadata) {
+        meta.addOffset(data.currentStaggerOffset);
+        data.currentStaggerOffset += duration;
+        return meta;
+      }
+    }
+  };
+};
 
 // TODO allow strings for delay and parse duration
 export const animateChild = (delay?: number) => {

@@ -20,13 +20,22 @@ export class AnimationNode {
   public childAnimations: Map<string, AnimationNode> = new Map();
   public canAnimate = true;
 
-  constructor(public containerElement: HTMLElement) {
-    this.targetElement = containerElement.children[0] as HTMLElement;
-    this.parentElement = containerElement.parentNode as HTMLElement;
-    this.containerElement.addEventListener(
-      'animation',
-      this.handleChild.bind(this)
-    );
+  constructor(
+    public containerElement?: HTMLElement,
+    targetElement?: HTMLElement
+  ) {
+    this.targetElement =
+      targetElement || (containerElement.children[0] as HTMLElement);
+
+    if (containerElement) {
+      // if we passed a container element, we know that this node represents animation-container element
+      // otherwise, its probably a node for a child animation, so we don't need the below logic
+      this.parentElement = containerElement.parentNode as HTMLElement;
+      containerElement.addEventListener(
+        'animation',
+        this.handleChild.bind(this)
+      );
+    }
   }
 
   addTransition(name: string, timeline: AnimationTimeline) {
@@ -65,7 +74,7 @@ export class AnimationNode {
     const timeline = this.transitions.find(transition);
 
     if (timeline) {
-      if (!options.replayed) {
+      if (!options.replayed && this.containerElement) {
         // build and dispatch event to next animation node parent in DOM
         const detail: AnimationEvent = {
           name: this.name,
@@ -83,7 +92,7 @@ export class AnimationNode {
       }
 
       if (this.canAnimate) {
-        if (current === 'void') {
+        if (current === 'void' && this.containerElement) {
           // element is leaving the view, play some DOM trickery to animate them off
           this.handleElementLeave(timeline);
         }
