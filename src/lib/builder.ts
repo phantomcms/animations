@@ -1,9 +1,24 @@
-import { AnimationNode } from './tree';
+import { AnimationNode } from './node';
 import { AnimationMetadata, AnimationState } from './metadata';
+import { AnimationTimeline } from './timeline';
 
 export class AnimationCompilationData {
   styles: AnimationState[] = [];
   states: Map<string, AnimationState> = new Map();
+  timeline: AnimationTimeline;
+
+  stateNames: [string, string];
+
+  set transition(name: string) {
+    const parts = name.split(' ');
+    parts.splice(1, 1);
+
+    this.stateNames = [...parts] as [string, string];
+  }
+
+  get transition() {
+    return this.stateNames.join(' => ');
+  }
 }
 
 export type AnimationStep = (
@@ -16,12 +31,14 @@ export const trigger = (name: string, actions: AnimationStep[]) => {
   return (node: AnimationNode) => {
     console.time(`trigger ${name}`);
 
-    // set the name attribute for the container tag
+    // set the name attribute for the container tag/node
     node.containerElement.setAttribute('animation-name', name);
     node.name = name;
 
+    // create an object to store temporary data as it's moved around builder functions
     const data = new AnimationCompilationData();
 
+    // call each of the provided actions
     actions.forEach((action) => action(node, data));
 
     console.timeEnd(`trigger ${name}`);
@@ -33,49 +50,23 @@ export const transition = (name: string, actions: AnimationStep[]) => {
     node: AnimationNode,
     data: AnimationCompilationData
   ) {
-    const animations: AnimationMetadata[] = [];
+    data.transition = name.startsWith(':') ? mapAliasToTransition(name) : name;
+    data.timeline = new AnimationTimeline();
 
     actions.forEach((action) => {
       const animation = action(node, data);
 
-      if (animation instanceof AnimationMetadata && data.styles.length) {
-        // action was an animation function, generate appropriate states from styles
-        // the last element in the styles array is our final state, all previous calls to style should be combined
-        const initial = Object.assign({}, ...data.styles.slice(0, -1));
-        const final = data.styles.slice(-1)[0];
-
-        Object.keys(initial).forEach((key) => {
-          if (key in final === false) {
-            delete initial[key];
-          }
-        });
-
-        Object.keys(final).forEach((key) => {
-          if (key in initial === false) {
-            delete final[key];
-          }
-        });
-
-        animation.states = [initial, final];
-
-        // remove the final style so that we can reuse the intial styles if there are multiple calls to animate
-        data.styles.pop();
+      if (animation instanceof AnimationMetadata) {
+        // action returned a set of animation metadata, add it to the timeline
+        data.timeline.addMetadata(animation);
       }
-
-      animations.push(animation);
     });
 
-    node.addTransition(
-      name.startsWith(':') ? mapAliasToTransition(name) : name,
-      animations
-    );
+    node.addTransition(data.transition, data.timeline);
   };
 };
 
-export const state = (
-  name: string,
-  actions: ((node: AnimationNode, data: AnimationCompilationData) => any)[]
-) => {
+export const state = (name: string, actions: AnimationStep[]) => {
   return function state(node: AnimationNode, data: AnimationCompilationData) {
     // check if data.styles is empty
     if (data.styles && data.styles.length) {
@@ -88,17 +79,20 @@ export const state = (
     // call style/query functions
     actions.forEach((action) => action(node, data));
 
-    // combine any styles into a single style and store as state
-    node.addState(name, Object.assign({}, ...data.styles));
+    // any style functions in the actions array will have added AnimationState objects to the data.styles array
+    // we can use them to compile states
 
-    // empty the data.styles array
+    // combine any styles into a single style and store as state
+    data.states.set(name, Object.assign({}, ...data.styles));
+
+    // empty the data.styles array to use again in future calls to state/stylez
     data.styles = [];
   };
 };
 
-export const style = (styledata: AnimationState) => {
+export const style = (styleData: AnimationState) => {
   return function style(_: AnimationNode, data: AnimationCompilationData) {
-    data.styles.push(styledata);
+    data.styles.push(styleData);
   };
 };
 
@@ -108,14 +102,41 @@ export const animate = (
 ) => {
   return function animate(
     node: AnimationNode,
-    data: AnimationCompilationData
+    data: AnimationCompilationData,
+    useElement?: HTMLElement
   ): AnimationMetadata {
     if (style) {
-      // call the provided style function
-      style(node, data);
-    }
+      const metadata = new AnimationMetadata(
+        timing,
+        useElement || node.targetElement
+      );
 
-    return new AnimationMetadata(timing);
+      // call the provided style function, then build animation metadata from styles
+      style(node, data);
+
+      // the last element in the styles array is our final state, all previous calls to style should be combined
+      const initial = Object.assign({}, ...data.styles.slice(0, -1));
+      const final = data.styles.slice(-1)[0];
+
+      Object.keys(initial).forEach((key) => {
+        if (key in final === false) {
+          delete initial[key];
+        }
+      });
+
+      Object.keys(final).forEach((key) => {
+        if (key in initial === false) {
+          delete final[key];
+        }
+      });
+
+      metadata.useStates([initial, final]);
+
+      // remove the final style so that we can reuse the intial styles if there are multiple calls to animate
+      data.styles.pop();
+
+      return metadata;
+    }
   };
 };
 
@@ -127,6 +148,17 @@ export const query = (queryString: string, actions: AnimationStep[]) => {
       node.containerElement.querySelectorAll(resultQuery)
     ).map((element: HTMLElement) => {
       const animationName = element.getAttribute('animation-name');
+
+      if (animationName) {
+        // use the animation node instead
+        const [action] = actions;
+
+        const childNode = node.childAnimations.get(animationName);
+
+        if (action.name === 'animateChild') {
+          action(childNode, undefined);
+        }
+      }
     });
   };
 };
@@ -138,9 +170,12 @@ export const group = () => {};
 
 export const stagger = () => {};
 
-// TODO animate child should receive a host element, query the tree for the corresponding AnimationTreeNode, and unlock that node
-export const animateChild = () => {
-  return function animateChild(node: AnimationNode) {};
+// TODO allow strings for delay and parse duration
+export const animateChild = (delay?: number) => {
+  return function animateChild(node: AnimationNode) {
+    node.canAnimate = true;
+    node.replay({ delay });
+  };
 };
 
 function parseQuery(query: string) {
@@ -148,7 +183,11 @@ function parseQuery(query: string) {
 
   // replace @ references to child animations
   (query.match(/@[0-z_*-]+/gi) || []).map((match) => {
-    query = query.replace(match, `[animation-name='${match.substring(1)}']`);
+    query = query.replace(
+      match,
+      `[animation-name` +
+        (match.substring(1) !== '*' ? `='${match.substring(1)}']` : ']')
+    );
   });
 
   return query;

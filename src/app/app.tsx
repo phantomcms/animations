@@ -9,14 +9,27 @@ import {
   animateChild,
 } from '../lib';
 
+// const panel = trigger('panel', [
+//   state('void', [style({ transform: 'translateX(-400px)' })]),
+//   state('medium', [style({ trandform: 'translateX(-200px)' })]),
+//   state('next', [
+//     style({ transform: 'translateX(0)' }),
+//     query('@menu', [animateChild()]),
+//   ]),
+//   transition(':enter', [animate('350ms ease')]),
+//   transition(':leave', [animate('200ms ease')]),
+// ]);
+
 const panel = trigger('panel', [
-  state('void', [style({ transform: 'translateX(-400px)' })]),
-  state('next', [
-    style({ transform: 'translateX(0)' }),
-    query('@menu', [animateChild()]),
+  transition(':enter', [
+    style({ transform: 'translateX(-400px)' }),
+    animate('350ms ease', style({ transform: 'translateX(0)' })),
+    query('@*', [animateChild()]),
   ]),
-  transition('void => next', [animate('350ms ease')]),
-  transition('* => void', [animate('200ms ease')]),
+  transition(':leave', [
+    style({ transform: 'translateX(0)' }),
+    animate('250ms ease', style({ transform: 'translateX(-400px)' })),
+  ]),
 ]);
 
 const menu = trigger('menu', [
@@ -26,20 +39,13 @@ const menu = trigger('menu', [
   ]),
 ]);
 
-const nope = trigger('nope', [
-  transition(':enter', [
-    style({ transform: 'translateY(200px)', opacity: 0 }),
-    animate('2000ms ease', style({ transform: 'translateY(0)', opacity: 1 })),
-  ]),
-]);
-
 @Component({
   tag: 'app-root',
   styleUrl: 'app.css',
   shadow: true,
 })
 export class AppRoot {
-  @State() shouldShow: boolean;
+  @State() shouldShow: boolean = true;
 
   handleClick = () => {
     this.shouldShow = !this.shouldShow;

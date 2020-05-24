@@ -5,7 +5,7 @@
  * It contains typing information for all components that exist in this project.
  */
 import { HTMLStencilElement, JSXBase } from '@stencil/core/internal';
-import { AnimationNode } from './lib/tree';
+import { AnimationNode } from './lib/node';
 export namespace Components {
   interface AnimationContainer {
     'animation': (node: AnimationNode) => any;

@@ -1,26 +1,20 @@
-import { AnimationMetadata } from './metadata';
+import { AnimationTimeline } from './timeline';
 
 export type AnimationTransitionDictionary = {
-  [key: string]: AnimationMetadata | { [key: string]: AnimationMetadata };
+  [key: string]: AnimationTimeline | { [key: string]: AnimationTimeline };
 };
 
 export class AnimationTransitionStore {
   transitions: AnimationTransitionDictionary = {};
 
-  constructor() {}
-
-  find(transition: string): AnimationMetadata[] {
+  find(transition: string): AnimationTimeline {
     const parts = transition.split(' ');
     parts.splice(1, 1);
 
-    let result: AnimationTransitionDictionary | AnimationMetadata = this
+    let result: AnimationTransitionDictionary | AnimationTimeline = this
       .transitions;
 
     for (let part of parts) {
-      if (Array.isArray(result)) {
-        return result as AnimationMetadata[];
-      }
-
       if (!result[part] && !result['*']) {
         return;
       }
@@ -28,14 +22,18 @@ export class AnimationTransitionStore {
       result = result[part] || result['*'];
     }
 
-    return Array.isArray(result) ? (result as AnimationMetadata[]) : undefined;
+    return result instanceof AnimationTimeline ? result : undefined;
   }
 
-  set(transition: string, animation: AnimationMetadata[]) {
+  set(
+    transition: string,
+    animation: AnimationTimeline,
+    options?: { force?: boolean }
+  ) {
     const parts = transition.split(' ');
     parts.splice(1, 1);
 
-    let targetLocation: AnimationTransitionDictionary | AnimationMetadata = this
+    let targetLocation: AnimationTransitionDictionary | AnimationTimeline = this
       .transitions;
 
     for (let part of parts) {
@@ -46,15 +44,17 @@ export class AnimationTransitionStore {
       targetLocation = targetLocation[part];
     }
 
-    let currentTransitions = this.transitions[parts[0]][parts[1]];
-
-    if (Array.isArray(currentTransitions)) {
-      // there's already a transition here, it should now be an array
-      this.transitions[parts[0]][parts[1]] = currentTransitions.concat(
-        animation
+    if (
+      this.transitions[parts[0]][parts[1]] instanceof AnimationTimeline &&
+      (!options || !options.force)
+    ) {
+      console.warn(
+        `A timeline already exists for transtion ${transition}. If you'd like to overwrite it, call this method with the \'force\' option set to true.`
       );
-    } else {
-      this.transitions[parts[0]][parts[1]] = animation;
     }
+
+    this.transitions[parts[0]][parts[1]] = animation;
+
+    console.log(this.transitions);
   }
 }

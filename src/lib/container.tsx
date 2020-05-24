@@ -1,5 +1,5 @@
 import { Component, Host, Element, Prop, h, Watch, State } from '@stencil/core';
-import { AnimationNode } from './tree';
+import { AnimationNode } from './node';
 
 @Component({
   tag: 'animation-container',
