@@ -1,8 +1,4 @@
-export interface AnimationTiming {
-  duration: number;
-  delay: number;
-  easing: string;
-}
+import { AnimationTiming, parseTiming } from './utils/parseTiming';
 
 export interface AnimationState {
   [key: string]: string | number;
@@ -21,7 +17,7 @@ export class AnimationMetadata {
 
   constructor(timing: string | AnimationTiming, private target: HTMLElement) {
     if (typeof timing === 'string') {
-      timing = this.parseTiming(timing);
+      timing = parseTiming(timing);
     }
 
     this.duration = timing.duration;
@@ -91,38 +87,4 @@ export class AnimationMetadata {
       this.animation.effect.updateTiming({ delay: this.delay });
     }
   }
-
-  // TODO extract to utils
-  private parseTiming(timing: string): AnimationTiming {
-    const timingParts = timing.split(' ');
-
-    let duration: string, delay: string, easing: string;
-
-    if (timingParts.length === 3) {
-      [duration, delay, easing] = timingParts;
-    } else {
-      [duration, easing] = timingParts;
-    }
-
-    return {
-      duration: parseDuration(duration),
-      delay: parseDuration(delay) || 0,
-      easing,
-    };
-  }
-}
-
-// TODO extract to utils
-function parseDuration(duration: string) {
-  let value = parseFloat(duration);
-
-  if (!value) {
-    return 0;
-  }
-
-  if (duration.match(/[0-9]+s$/gi)) {
-    value *= 1000;
-  }
-
-  return value;
 }

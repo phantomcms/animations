@@ -1,6 +1,7 @@
 import { AnimationNode } from './node';
 import { AnimationMetadata, AnimationState } from './metadata';
 import { AnimationTimeline } from './timeline';
+import { parseDuration } from './utils/parseDuration';
 
 export class AnimationCompilationData {
   styles: AnimationState[] = [];
@@ -180,31 +181,45 @@ export const query = (queryString: string, actions: AnimationStep[]) => {
   };
 };
 
-export const sequence = () => {};
+export const sequence = () => {
+  throw new Error('Not yet implemented');
+};
 
 // TODO what does this do and do we need it?
-export const group = () => {};
+export const group = () => {
+  throw new Error('Not yet implemented');
+};
 
-// TODO parse duration and allow strings
-export const stagger = (duration: number, actions: AnimationStep[]) => {
+export const stagger = (
+  duration: string | number,
+  actions: AnimationStep[]
+) => {
+  if (typeof duration === 'string') {
+    duration = parseDuration(duration);
+  }
   return function stagger(node: AnimationNode, data: AnimationCompilationData) {
     const results = actions.map((action) => action(node, data));
 
     for (let meta of results) {
       if (meta instanceof AnimationMetadata) {
         meta.addOffset(data.currentStaggerOffset);
-        data.currentStaggerOffset += duration;
+        // we can safely cast duration to a number here since we've parse it above
+        data.currentStaggerOffset += duration as number;
         return meta;
       }
     }
   };
 };
 
-// TODO allow strings for delay and parse duration
-export const animateChild = (delay?: number) => {
+export const animateChild = (delay?: string | number) => {
+  if (typeof delay === 'string') {
+    delay = parseDuration(delay);
+  }
+
   return function animateChild(node: AnimationNode) {
     node.canAnimate = true;
-    node.replay({ delay });
+    // we can safely cast delay to a number here since we've parsed it above
+    node.replay({ delay: delay as number });
   };
 };
 
