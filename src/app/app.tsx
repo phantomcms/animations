@@ -39,7 +39,7 @@ const panel = trigger('panel', [
     animate('350ms ease', style({ transform: 'translateX(0)' })),
     query('li', [
       style({ opacity: 0, transform: 'translateY(50px)' }),
-      stagger(80, [
+      stagger('80ms', [
         animate(
           '350ms 100ms ease',
           style({ opacity: 1, transform: 'translateY(0)' })
@@ -49,7 +49,16 @@ const panel = trigger('panel', [
   ]),
   transition(':leave', [
     style({ transform: 'translateX(0)' }),
-    animate('250ms ease', style({ transform: 'translateX(-400px)' })),
+    query('li', [
+      style({ opacity: 1, transform: 'translateX(0)' }),
+      stagger('45ms', [
+        animate(
+          '200ms ease',
+          style({ opacity: 0, transform: 'translateX(-100px)' })
+        ),
+      ]),
+    ]),
+    animate('250ms 200ms ease', style({ transform: 'translateX(-400px)' })),
   ]),
 ]);
 
