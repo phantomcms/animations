@@ -34,7 +34,7 @@ const panel = trigger('panel', [
 
 const menu = trigger('menu', [
   transition(':enter', [
-    style({ transform: 'translateY(200px)', opacity: 0 }),
+    style({ transform: 'translateY(100px)', opacity: 0 }),
     animate('200ms ease', style({ transform: 'translateY(0)', opacity: 1 })),
   ]),
 ]);

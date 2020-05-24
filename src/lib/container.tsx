@@ -1,4 +1,4 @@
-import { Component, Host, Element, Prop, h, Watch, State } from '@stencil/core';
+import { Component, Host, Element, Prop, h, Watch } from '@stencil/core';
 import { AnimationNode } from './node';
 
 @Component({
@@ -7,14 +7,10 @@ import { AnimationNode } from './node';
 })
 export class AnimationContainer {
   @Element() root: HTMLElement;
-  host: HTMLElement;
-  parent: HTMLElement;
 
   @Prop() animation: (node: AnimationNode) => any;
 
-  @Prop() state: string = 'void';
-
-  @State() loaded: boolean;
+  @Prop() state: string;
 
   node: AnimationNode;
 
@@ -25,8 +21,6 @@ export class AnimationContainer {
 
   componentWillLoad() {
     this.node = new AnimationNode(this.root);
-    this.host = this.root.children[0] as HTMLElement;
-    this.parent = this.root.parentNode as HTMLElement;
 
     // set initial void state
     this.node.trigger('void');

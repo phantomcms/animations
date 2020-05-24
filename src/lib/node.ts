@@ -35,11 +35,7 @@ export class AnimationNode {
 
   trigger(state: string) {
     if (this.currentState) {
-      const transition = `${this.currentState} => ${state}`;
-      this.handleTransition(transition, {
-        initial: this.currentState,
-        current: state,
-      });
+      this.handleTransition(this.currentState, state);
     } else {
       // we're setting the initial state, noop
     }
@@ -50,23 +46,21 @@ export class AnimationNode {
 
   replay(options?: { delay?: number }) {
     const initial = this.previousStates.slice(-1)[0];
-    this.handleTransition(`${initial} => ${this.currentState}`, {
-      initial,
-      current: this.currentState,
+    this.handleTransition(initial, this.currentState, {
       replayed: true,
       delay: options ? options.delay || 0 : 0,
     });
   }
 
   private handleTransition(
-    transition: string,
+    initial: string,
+    current: string,
     options: {
-      initial: string;
-      current: string;
       replayed?: boolean;
       delay?: number;
-    }
+    } = {}
   ) {
+    const transition = `${initial} => ${current}`;
     // retrieve metadata based on the transition name
     const timeline = this.transitions.find(transition);
 
@@ -89,7 +83,7 @@ export class AnimationNode {
       }
 
       if (this.canAnimate) {
-        if (options.replayed && options.current === 'void') {
+        if (current === 'void') {
           // element is leaving the view, play some DOM trickery to animate them off
           this.handleElementLeave(timeline);
         }
