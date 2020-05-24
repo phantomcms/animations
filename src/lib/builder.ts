@@ -146,38 +146,54 @@ export const animate = (
   };
 };
 
-export const query = (queryString: string, actions: AnimationStep[]) => {
+export const query = (
+  queryString: string,
+  actions: AnimationStep[],
+  options: { optional?: boolean; reverse?: boolean } = {}
+) => {
   return function query(node: AnimationNode, data: AnimationCompilationData) {
     // parse query
     const resultQuery = parseQuery(queryString);
     const childData = new AnimationCompilationData();
 
-    node.containerElement
-      .querySelectorAll(resultQuery)
-      .forEach((element: HTMLElement) => {
-        const animationName = element.getAttribute('animation-name');
+    let results = Array.from(
+      node.containerElement.querySelectorAll(resultQuery)
+    );
 
-        if (animationName) {
-          // use the animation node instead
-          const [action] = actions;
+    if (!results.length && !options.optional) {
+      console.error(
+        `No results found for query '${queryString}'. If this is intentional, you can silence this warning by setting the 'optional' option to true.`
+      );
+    }
 
-          const childNode = node.childAnimations.get(animationName);
+    if (options.reverse) {
+      results = results.reverse();
+    }
 
-          if (action.name === 'animateChild') {
-            action(childNode, undefined);
-          }
-        } else {
-          const childNode = new AnimationNode(undefined, element);
+    results.forEach((element: HTMLElement) => {
+      const animationName = element.getAttribute('animation-name');
 
-          actions
-            .map((action) => action(childNode, childData))
-            .map((metadata) => {
-              if (metadata instanceof AnimationMetadata) {
-                data.timeline.addMetadata(metadata);
-              }
-            });
+      if (animationName) {
+        // use the animation node instead
+        const [action] = actions;
+
+        const childNode = node.childAnimations.get(animationName);
+
+        if (action.name === 'animateChild') {
+          action(childNode, undefined);
         }
-      });
+      } else {
+        const childNode = new AnimationNode(undefined, element);
+
+        actions
+          .map((action) => action(childNode, childData))
+          .map((metadata) => {
+            if (metadata instanceof AnimationMetadata) {
+              data.timeline.addMetadata(metadata);
+            }
+          });
+      }
+    });
   };
 };
 

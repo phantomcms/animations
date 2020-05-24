@@ -1,51 +1,23 @@
 import { Component, Host, h, State } from '@stencil/core';
-import {
-  trigger,
-  animate,
-  transition,
-  style,
-  state,
-  query,
-  animateChild,
-  stagger,
-} from '../lib';
-
-// const panel = trigger('panel', [
-//   state('void', [style({ transform: 'translateX(-400px)' })]),
-//   state('medium', [style({ trandform: 'translateX(-200px)' })]),
-//   state('next', [
-//     style({ transform: 'translateX(0)' }),
-//     query('@menu', [animateChild()]),
-//   ]),
-//   transition(':enter', [animate('350ms ease')]),
-//   transition(':leave', [animate('200ms ease')]),
-// ]);
-
-// const panel = trigger('panel', [
-//   transition(':enter', [
-//     style({ transform: 'translateX(-400px)' }),
-//     animate('350ms ease', style({ transform: 'translateX(0)' })),
-//     query('@*', [animateChild()]),
-//   ]),
-//   transition(':leave', [
-//     style({ transform: 'translateX(0)' }),
-//     animate('250ms ease', style({ transform: 'translateX(-400px)' })),
-//   ]),
-// ]);
+import { trigger, animate, transition, style, query, stagger } from '../lib';
 
 const panel = trigger('panel', [
   transition(':enter', [
     style({ transform: 'translateX(-400px)' }),
     animate('350ms ease', style({ transform: 'translateX(0)' })),
-    query('li', [
-      style({ opacity: 0, transform: 'translateY(50px)' }),
-      stagger('100ms', [
-        animate(
-          '350ms 100ms ease',
-          style({ opacity: 1, transform: 'translateY(0)' })
-        ),
-      ]),
-    ]),
+    query(
+      'li',
+      [
+        style({ opacity: 0, transform: 'translateX(-100px)' }),
+        stagger('60ms', [
+          animate(
+            '200ms ease',
+            style({ opacity: 1, transform: 'translateX(0)' })
+          ),
+        ]),
+      ],
+      { reverse: true }
+    ),
   ]),
   transition(':leave', [
     style({ transform: 'translateX(0)' }),
@@ -58,14 +30,7 @@ const panel = trigger('panel', [
         ),
       ]),
     ]),
-    animate('250ms 200ms ease', style({ transform: 'translateX(-400px)' })),
-  ]),
-]);
-
-const menu = trigger('menu', [
-  transition(':enter', [
-    style({ transform: 'translateY(100px)', opacity: 0 }),
-    animate('200ms ease', style({ transform: 'translateY(0)', opacity: 1 })),
+    animate('200ms 100ms ease', style({ transform: 'translateX(-400px)' })),
   ]),
 ]);
 
@@ -88,15 +53,13 @@ export class AppRoot {
         {this.shouldShow && (
           <animation-container animation={panel}>
             <div class="panel">
-              {/* <animation-container animation={menu}> */}
               <ul>
-                <li>some menu item</li>
-                <li>some other menu item</li>
-                <li>short item</li>
-                <li>thing one</li>
-                <li>blue fish</li>
+                <li onClick={this.handleClick}>some menu item</li>
+                <li onClick={this.handleClick}>some other menu item</li>
+                <li onClick={this.handleClick}>short item</li>
+                <li onClick={this.handleClick}>thing one</li>
+                <li onClick={this.handleClick}>blue fish</li>
               </ul>
-              {/* </animation-container> */}
             </div>
           </animation-container>
         )}
