@@ -39,7 +39,7 @@ const panel = trigger('panel', [
     animate('350ms ease', style({ transform: 'translateX(0)' })),
     query('li', [
       style({ opacity: 0, transform: 'translateY(50px)' }),
-      stagger('80ms', [
+      stagger('100ms', [
         animate(
           '350ms 100ms ease',
           style({ opacity: 1, transform: 'translateY(0)' })

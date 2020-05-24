@@ -1,4 +1,5 @@
 import { AnimationTiming, parseTiming } from './utils/parseTiming';
+import { parseDuration } from './utils/parseDuration';
 
 export interface AnimationState {
   [key: string]: string | number;
