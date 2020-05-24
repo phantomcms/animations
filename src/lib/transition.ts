@@ -54,7 +54,5 @@ export class AnimationTransitionStore {
     }
 
     this.transitions[parts[0]][parts[1]] = animation;
-
-    console.log(this.transitions);
   }
 }

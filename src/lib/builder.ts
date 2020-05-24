@@ -29,7 +29,9 @@ export type AnimationStep = (
 // create
 export const trigger = (name: string, actions: AnimationStep[]) => {
   return (node: AnimationNode) => {
-    console.time(`trigger ${name}`);
+    if (process.env.NODE_ENV === 'development') {
+      console.time(`trigger ${name}`);
+    }
 
     // set the name attribute for the container tag/node
     node.containerElement.setAttribute('animation-name', name);
@@ -41,7 +43,9 @@ export const trigger = (name: string, actions: AnimationStep[]) => {
     // call each of the provided actions
     actions.forEach((action) => action(node, data));
 
-    console.timeEnd(`trigger ${name}`);
+    if (process.env.NODE_ENV === 'development') {
+      console.timeEnd(`trigger ${name}`);
+    }
   };
 };
 
