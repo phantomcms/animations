@@ -101,6 +101,7 @@ export class AnimationNode {
           timeline.addOffset(options.delay);
         }
 
+        console.log('playing', this.name);
         timeline.play();
       }
     }

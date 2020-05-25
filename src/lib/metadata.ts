@@ -7,8 +7,9 @@ export interface AnimationState {
 
 export class AnimationMetadata {
   private duration: number;
-  private delay: number;
   private easing: string;
+  private delay: number;
+  private additionalDelay: number = 0;
 
   private animation: Animation;
   private states: AnimationState[] = [];
@@ -26,13 +27,13 @@ export class AnimationMetadata {
     this.easing = timing.easing || 'ease';
   }
 
-  useStates(states: AnimationState[]) {
+  public useStates(states: AnimationState[]) {
     if (!this.animation) {
       this.states = states;
     }
   }
 
-  play() {
+  public play() {
     if (!this.animating && this.animation) {
       this.animation.play();
     } else if (!this.animation) {
@@ -42,7 +43,9 @@ export class AnimationMetadata {
       });
 
       this.animation = this.target.animate(this.states, {
-        ...this.timing,
+        duration: this.duration,
+        delay: this.delay + this.additionalDelay,
+        easing: this.easing,
         fill: 'forwards',
       });
     }
@@ -50,31 +53,31 @@ export class AnimationMetadata {
     this.animating = true;
   }
 
-  pause() {
-    this.animating = false;
-
+  public pause() {
     if (this.animating) {
       this.animation.pause();
     } else {
       console.warn('Cannot pause animation: not playing');
     }
+
+    this.animating = false;
   }
 
-  seek(time: number) {
+  public seek(time: number) {
     throw new Error('Not yet implemented');
   }
 
   get timing() {
     return {
       duration: this.duration,
-      delay: this.delay,
+      delay: this.delay + this.additionalDelay,
       easing: this.easing,
       computedDuration: this.computedDuration,
     };
   }
 
   get computedDuration() {
-    return this.delay + this.duration;
+    return this.delay + this.additionalDelay + this.duration;
   }
 
   public addOffset(duration: number | string) {
@@ -82,10 +85,23 @@ export class AnimationMetadata {
       duration = parseDuration(duration);
     }
 
-    this.delay += duration;
+    this.additionalDelay += duration;
 
     if (this.animation) {
-      this.animation.effect.updateTiming({ delay: this.delay });
+      this.animation.effect.updateTiming({
+        delay: this.delay + this.additionalDelay,
+      });
     }
+  }
+
+  public reset() {
+    if (this.animating) {
+      this.pause();
+    }
+
+    this.additionalDelay = 0;
+    this.time = 0;
+
+    this.target.removeAttribute('style');
   }
 }

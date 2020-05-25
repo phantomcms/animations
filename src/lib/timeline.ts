@@ -8,11 +8,11 @@ export class AnimationTimeline {
 
   constructor() {}
 
-  addMetadata(meta: AnimationMetadata): void {
+  public addMetadata(meta: AnimationMetadata): void {
     this.metadata.push(meta);
   }
 
-  addOffset(offset: number) {
+  public addOffset(offset: number) {
     if (!this.animating && this.canAnimate) {
       this.metadata.forEach((meta) => {
         meta.addOffset(offset);
@@ -20,7 +20,7 @@ export class AnimationTimeline {
     }
   }
 
-  play(): void {
+  public play(): void {
     if (!this.animating && this.canAnimate) {
       this.metadata.forEach((meta) => {
         meta.play();
@@ -38,10 +38,10 @@ export class AnimationTimeline {
     requestAnimationFrame(this.tick.bind(this));
   }
 
-  pause(): void {
+  public pause(): void {
     if (this.animating) {
       this.metadata.forEach((meta) => {
-        meta.play();
+        meta.pause();
       });
     } else {
       console.warn('Cannot pause animation timeline: not playing');
@@ -50,7 +50,7 @@ export class AnimationTimeline {
     this.animating = false;
   }
 
-  seek(time: number): void {
+  public seek(time: number): void {
     if (!this.animating && this.canAnimate) {
       this.metadata.forEach((meta) => {
         meta.seek(time);
@@ -60,16 +60,25 @@ export class AnimationTimeline {
     this.time = time;
   }
 
-  get canAnimate(): boolean {
+  public get canAnimate(): boolean {
     return !!(this.metadata && this.metadata.length);
   }
 
-  get computedDuration(): number {
+  public get computedDuration(): number {
     return Math.max(
       ...(this.metadata && this.metadata.length
         ? this.metadata.map((m) => m.computedDuration)
         : [])
     );
+  }
+
+  public reset() {
+    this.pause();
+    this.time = 0;
+
+    this.metadata.forEach((meta) => {
+      meta.reset();
+    });
   }
 
   private tick(): void {
@@ -84,14 +93,5 @@ export class AnimationTimeline {
     } else if (this.time > this.computedDuration) {
       this.reset();
     }
-  }
-
-  private reset() {
-    this.pause();
-    this.time = 0;
-
-    this.metadata.forEach((meta) => {
-      meta.time = 0;
-    });
   }
 }
