@@ -34,23 +34,39 @@ const panel = trigger('panel', [
   ]),
 ]);
 
+const banner = trigger('banner', [
+  transition(':enter', [
+    style({ opacity: 0, transform: 'scale(0.9)' }),
+    animate('1000ms ease', style({ opacity: 1, transform: 'scale(1)' })),
+  ]),
+  transition(':leave', [
+    style({ opacity: 1, transform: 'scale(1)' }),
+    animate('250ms ease', style({ opacity: 0, transform: 'scale(1.05)' })),
+  ]),
+]);
+
 @Component({
   tag: 'app-root',
   styleUrl: 'app.css',
   shadow: true,
 })
 export class AppRoot {
-  @State() shouldShow: boolean = true;
+  @State() showPanel: boolean = true;
+  @State() showBanner: boolean = true;
 
   handleClick = () => {
-    this.shouldShow = !this.shouldShow;
+    this.showPanel = !this.showPanel;
+  };
+
+  toggleBanner = () => {
+    this.showBanner = !this.showBanner;
   };
 
   render() {
     return (
       <Host>
         <button onClick={this.handleClick}>toggle</button>
-        {this.shouldShow && (
+        {this.showPanel && (
           <animation-container animation={panel}>
             <div class="panel">
               <ul>
@@ -60,6 +76,16 @@ export class AppRoot {
                 <li onClick={this.handleClick}>thing one</li>
                 <li onClick={this.handleClick}>blue fish</li>
               </ul>
+              <button class="panel__banner-toggle" onClick={this.toggleBanner}>
+                Show banner
+              </button>
+              {this.showBanner && (
+                <animation-container animation={banner}>
+                  <div class="banner">
+                    An error occurred! Please try again later.
+                  </div>
+                </animation-container>
+              )}
             </div>
           </animation-container>
         )}
