@@ -1,7 +1,11 @@
 import { AnimationNode } from './node';
 import { AnimationMetadata, AnimationState } from './metadata';
 import { AnimationTimeline } from './timeline';
+
+// utils
 import { parseDuration } from './utils/parseDuration';
+import { mapAliasToTransition } from './utils/mapAliasToTransition';
+import { parseQuery } from './utils/parseQuery';
 
 export class AnimationCompilationData {
   styles: AnimationState[] = [];
@@ -29,7 +33,6 @@ export type AnimationStep = (
   useElement?: HTMLElement
 ) => any;
 
-// create
 export const trigger = (name: string, actions: AnimationStep[]) => {
   return (node: AnimationNode) => {
     if (process.env.NODE_ENV === 'development') {
@@ -182,6 +185,10 @@ export const query = (
 
         if (action.name === 'animateChild') {
           action(childNode, undefined);
+        } else {
+          console.warn(
+            `Unsupported animation action: '${action.name}'. Animation elements only support the 'animateChild' action.`
+          );
         }
       } else {
         actions
@@ -197,11 +204,6 @@ export const query = (
 };
 
 export const sequence = () => {
-  throw new Error('Not yet implemented');
-};
-
-// TODO what does this do and do we need it?
-export const group = () => {
   throw new Error('Not yet implemented');
 };
 
@@ -230,39 +232,9 @@ export const stagger = (
   };
 };
 
-export const animateChild = (delay?: string | number) => {
-  if (typeof delay === 'string') {
-    delay = parseDuration(delay);
-  }
-
+export const animateChild = () => {
   return function animateChild(node: AnimationNode) {
     // we can safely cast delay to a number here since we've parsed it above
-    node.replay({ delay: delay as number });
+    node.ignoreParentAnimation();
   };
 };
-
-function parseQuery(query: string) {
-  // TODO handle querying for :enter and :leave states
-
-  // replace @ references to child animations
-  (query.match(/@[0-z_*-]+/gi) || []).map((match) => {
-    query = query.replace(
-      match,
-      `[animation-name` +
-        (match.substring(1) !== '*' ? `='${match.substring(1)}']` : ']')
-    );
-  });
-
-  return query;
-}
-
-function mapAliasToTransition(alias: string) {
-  switch (alias) {
-    case ':enter':
-      return 'void => *';
-    case ':leave':
-      return '* => void';
-    default:
-      throw new Error(`Transition alias '${name}' not recognized`);
-  }
-}

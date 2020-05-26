@@ -73,7 +73,10 @@ export class AnimationTimeline {
   }
 
   public reset() {
-    this.pause();
+    if (this.animating) {
+      this.pause();
+    }
+
     this.time = 0;
 
     this.metadata.forEach((meta) => {

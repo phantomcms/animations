@@ -1,5 +1,13 @@
 import { Component, Host, h, State } from '@stencil/core';
-import { trigger, animate, transition, style, query, stagger } from '../lib';
+import {
+  trigger,
+  animate,
+  transition,
+  style,
+  query,
+  stagger,
+  animateChild,
+} from '../lib';
 
 const panel = trigger('panel', [
   transition(':enter', [
@@ -18,6 +26,7 @@ const panel = trigger('panel', [
       ],
       { reverse: true }
     ),
+    query('@*', [animateChild()]),
   ]),
   transition(':leave', [
     style({ transform: 'translateX(0)' }),
@@ -66,6 +75,9 @@ export class AppRoot {
     return (
       <Host>
         <button onClick={this.handleClick}>toggle</button>
+        <button class="panel__banner-toggle" onClick={this.toggleBanner}>
+          Show banner
+        </button>
         {this.showPanel && (
           <animation-container animation={panel}>
             <div class="panel">
@@ -77,12 +89,6 @@ export class AppRoot {
                   <li onClick={this.handleClick}>thing one</li>
                   <li onClick={this.handleClick}>blue fish</li>
                 </ul>
-                <button
-                  class="panel__banner-toggle"
-                  onClick={this.toggleBanner}
-                >
-                  Show banner
-                </button>
                 {this.showBanner && (
                   <animation-container animation={banner}>
                     <div class="banner">

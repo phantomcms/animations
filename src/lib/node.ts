@@ -12,14 +12,17 @@ export class AnimationNode {
   private previousStates: string[] = [];
   private currentState: string;
   private transitions = new AnimationTransitionStore();
+  private shouldIgnoreParentAnimation: boolean;
 
   public targetElement: HTMLElement;
   public parentElement: HTMLElement;
 
   public name: string;
   public animating: boolean;
-  public currentTimeline: AnimationTimeline;
   public childAnimations: Map<string, AnimationNode> = new Map();
+
+  public currentTimeline: AnimationTimeline;
+  private currentTimelineTimeout: NodeJS.Timeout;
 
   constructor(
     public containerElement: HTMLElement,
@@ -53,6 +56,10 @@ export class AnimationNode {
       replayed: true,
       delay: options ? options.delay || 0 : 0,
     });
+  }
+
+  ignoreParentAnimation() {
+    this.shouldIgnoreParentAnimation = true;
   }
 
   private handleTransition(
@@ -97,15 +104,22 @@ export class AnimationNode {
       this.currentTimeline = timeline;
       this.animating = true;
 
-      setTimeout(() => {
+      this.currentTimelineTimeout = setTimeout(() => {
         this.animating = false;
-        this.currentTimeline.reset();
+
+        if (this.currentState !== 'void') {
+          this.currentTimeline.reset();
+        }
+
         this.currentTimeline = undefined;
+        this.currentTimelineTimeout = undefined;
+        this.shouldIgnoreParentAnimation = false;
       }, timeline.computedDuration);
 
       this.childAnimations.forEach((node) => {
-        if (node && node.currentTimeline) {
+        if (node && node.currentTimeline && !node.shouldIgnoreParentAnimation) {
           node.currentTimeline.reset();
+          clearTimeout(node.currentTimelineTimeout);
         }
       });
 
