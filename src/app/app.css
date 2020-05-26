@@ -2,13 +2,18 @@
   font-family: sans-serif;
   background: linear-gradient(45deg, #3900be, #0b78dd);
   color: white;
-  padding: 40px 0;
   min-width: 400px;
   position: fixed;
   left: 0;
   bottom: 0;
   top: 0;
   box-shadow: 2px 0 12px 1px rgba(0, 0, 0, 0.2);
+}
+
+.panel__inner {
+  padding: 40px 0;
+  position: relative;
+  min-height: 100%;
 }
 
 ul {
@@ -41,7 +46,6 @@ button {
   background: rgb(197, 17, 47);
   color: white;
   width: calc(100% - 40px);
-  position: fixed;
   bottom: 20px;
   margin-left: 20px;
   margin-right: 20px;
@@ -49,4 +53,7 @@ button {
   box-sizing: border-box;
   border-radius: 6px;
   text-align: center;
+  width: 360px;
+  position: fixed;
+  bottom: 20px;
 }

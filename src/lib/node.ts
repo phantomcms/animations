@@ -17,25 +17,19 @@ export class AnimationNode {
   public parentElement: HTMLElement;
 
   public name: string;
+  public animating: boolean;
+  public currentTimeline: AnimationTimeline;
   public childAnimations: Map<string, AnimationNode> = new Map();
-  public canAnimate = true;
 
   constructor(
-    public containerElement?: HTMLElement,
+    public containerElement: HTMLElement,
     targetElement?: HTMLElement
   ) {
     this.targetElement =
       targetElement || (containerElement.children[0] as HTMLElement);
 
-    if (containerElement) {
-      // if we passed a container element, we know that this node represents animation-container element
-      // otherwise, its probably a node for a child animation, so we don't need the below logic
-      this.parentElement = containerElement.parentNode as HTMLElement;
-      containerElement.addEventListener(
-        'animation',
-        this.handleChild.bind(this)
-      );
-    }
+    this.parentElement = containerElement.parentNode as HTMLElement;
+    containerElement.addEventListener('animation', this.handleChild.bind(this));
   }
 
   addTransition(name: string, timeline: AnimationTimeline) {
@@ -74,7 +68,7 @@ export class AnimationNode {
     const timeline = this.transitions.find(transition);
 
     if (timeline) {
-      if (!options.replayed && this.containerElement) {
+      if (!options.replayed) {
         // build and dispatch event to next animation node parent in DOM
         const detail: AnimationEvent = {
           name: this.name,
@@ -88,30 +82,39 @@ export class AnimationNode {
         );
 
         // as this event bubbles, it will be captured by any parent animation-container elements and modified or prevented by
-        // adding/removing/changing properties of metadata or flipping the node's canAnimate flag to false
+        // adding/removing/changing properties of metadata or reseting the timeline all together
       }
 
-      if (this.canAnimate) {
-        if (current === 'void' && this.containerElement) {
-          // element is leaving the view, play some DOM trickery to animate them off
-          this.handleElementLeave(timeline);
-        }
-
-        if (options && options.delay) {
-          timeline.addOffset(options.delay);
-        }
-
-        console.log('playing', this.name);
-        timeline.play();
+      if (current === 'void') {
+        // element is leaving the view, play some DOM trickery to animate them off
+        this.handleElementLeave(timeline);
       }
+
+      if (options && options.delay) {
+        timeline.addOffset(options.delay);
+      }
+
+      this.currentTimeline = timeline;
+      this.animating = true;
+
+      setTimeout(() => {
+        this.animating = false;
+        this.currentTimeline.reset();
+        this.currentTimeline = undefined;
+      }, timeline.computedDuration);
+
+      this.childAnimations.forEach((node) => {
+        if (node && node.currentTimeline) {
+          node.currentTimeline.reset();
+        }
+      });
+
+      timeline.play();
     }
   }
 
   private handleChild(event: CustomEvent<AnimationEvent>) {
     if (event.detail.name !== this.name) {
-      // disable child animations by default
-      event.detail.node.canAnimate = false;
-
       // add to children map
       this.childAnimations.set(event.detail.node.name, event.detail.node);
 

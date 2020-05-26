@@ -102,6 +102,8 @@ export class AnimationMetadata {
     this.additionalDelay = 0;
     this.time = 0;
 
+    this.animation.cancel();
+
     this.target.removeAttribute('style');
   }
 }

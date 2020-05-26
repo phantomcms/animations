@@ -25,7 +25,8 @@ export class AnimationCompilationData {
 
 export type AnimationStep = (
   node: AnimationNode,
-  data: AnimationCompilationData
+  data: AnimationCompilationData,
+  useElement?: HTMLElement
 ) => any;
 
 // create
@@ -183,10 +184,8 @@ export const query = (
           action(childNode, undefined);
         }
       } else {
-        const childNode = new AnimationNode(undefined, element);
-
         actions
-          .map((action) => action(childNode, childData))
+          .map((action) => action(node, childData, element))
           .map((metadata) => {
             if (metadata instanceof AnimationMetadata) {
               data.timeline.addMetadata(metadata);
@@ -213,13 +212,17 @@ export const stagger = (
   if (typeof duration === 'string') {
     duration = parseDuration(duration);
   }
-  return function stagger(node: AnimationNode, data: AnimationCompilationData) {
-    const results = actions.map((action) => action(node, data));
+  return function stagger(
+    node: AnimationNode,
+    data: AnimationCompilationData,
+    useElement?: HTMLElement
+  ) {
+    const results = actions.map((action) => action(node, data, useElement));
 
     for (let meta of results) {
       if (meta instanceof AnimationMetadata) {
         meta.addOffset(data.currentStaggerOffset);
-        // we can safely cast duration to a number here since we've parse it above
+        // we can safely cast duration to a number here since we've parsed it above
         data.currentStaggerOffset += duration as number;
         return meta;
       }
@@ -233,7 +236,6 @@ export const animateChild = (delay?: string | number) => {
   }
 
   return function animateChild(node: AnimationNode) {
-    node.canAnimate = true;
     // we can safely cast delay to a number here since we've parsed it above
     node.replay({ delay: delay as number });
   };

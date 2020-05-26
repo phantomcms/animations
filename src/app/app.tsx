@@ -8,11 +8,11 @@ const panel = trigger('panel', [
     query(
       'li',
       [
-        style({ opacity: 0, transform: 'translateX(-100px)' }),
-        stagger('60ms', [
+        style({ opacity: 0, transform: 'translateY(-50px)' }),
+        stagger('45ms', [
           animate(
-            '200ms ease',
-            style({ opacity: 1, transform: 'translateX(0)' })
+            '200ms 100ms ease',
+            style({ opacity: 1, transform: 'translateY(0)' })
           ),
         ]),
       ],
@@ -69,23 +69,28 @@ export class AppRoot {
         {this.showPanel && (
           <animation-container animation={panel}>
             <div class="panel">
-              <ul>
-                <li onClick={this.handleClick}>some menu item</li>
-                <li onClick={this.handleClick}>some other menu item</li>
-                <li onClick={this.handleClick}>short item</li>
-                <li onClick={this.handleClick}>thing one</li>
-                <li onClick={this.handleClick}>blue fish</li>
-              </ul>
-              <button class="panel__banner-toggle" onClick={this.toggleBanner}>
-                Show banner
-              </button>
-              {this.showBanner && (
-                <animation-container animation={banner}>
-                  <div class="banner">
-                    An error occurred! Please try again later.
-                  </div>
-                </animation-container>
-              )}
+              <div class="panel__inner">
+                <ul>
+                  <li onClick={this.handleClick}>some menu item</li>
+                  <li onClick={this.handleClick}>some other menu item</li>
+                  <li onClick={this.handleClick}>short item</li>
+                  <li onClick={this.handleClick}>thing one</li>
+                  <li onClick={this.handleClick}>blue fish</li>
+                </ul>
+                <button
+                  class="panel__banner-toggle"
+                  onClick={this.toggleBanner}
+                >
+                  Show banner
+                </button>
+                {this.showBanner && (
+                  <animation-container animation={banner}>
+                    <div class="banner">
+                      An error occurred! Please try again later.
+                    </div>
+                  </animation-container>
+                )}
+              </div>
             </div>
           </animation-container>
         )}
