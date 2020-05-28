@@ -7,26 +7,29 @@ import {
   query,
   stagger,
   animateChild,
+  sequence,
 } from '../lib';
 
 const panel = trigger('panel', [
   transition(':enter', [
     style({ transform: 'translateX(-400px)' }),
-    animate('350ms ease', style({ transform: 'translateX(0)' })),
-    query(
-      'li',
-      [
-        style({ opacity: 0, transform: 'translateY(-50px)' }),
-        stagger('45ms', [
-          animate(
-            '200ms 100ms ease',
-            style({ opacity: 1, transform: 'translateY(0)' })
-          ),
-        ]),
-      ],
-      { reverse: true }
-    ),
-    query('@*', [animateChild()]),
+    sequence([
+      animate('350ms ease', style({ transform: 'translateX(0)' })),
+      query('@banner', [animateChild()]),
+      query(
+        'li',
+        [
+          style({ opacity: 0, transform: 'translateY(-50px)' }),
+          stagger('45ms', [
+            animate(
+              '200ms ease',
+              style({ opacity: 1, transform: 'translateY(0)' })
+            ),
+          ]),
+        ],
+        { reverse: true }
+      ),
+    ]),
   ]),
   transition(':leave', [
     style({ transform: 'translateX(0)' }),
@@ -46,7 +49,7 @@ const panel = trigger('panel', [
 const banner = trigger('banner', [
   transition(':enter', [
     style({ opacity: 0, transform: 'scale(0.9)' }),
-    animate('1000ms ease', style({ opacity: 1, transform: 'scale(1)' })),
+    animate('300ms ease', style({ opacity: 1, transform: 'scale(1)' })),
   ]),
   transition(':leave', [
     style({ opacity: 1, transform: 'scale(1)' }),

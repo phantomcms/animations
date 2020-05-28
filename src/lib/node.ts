@@ -22,7 +22,6 @@ export class AnimationNode {
   public childAnimations: Map<string, AnimationNode> = new Map();
 
   public currentTimeline: AnimationTimeline;
-  private currentTimelineTimeout: NodeJS.Timeout;
 
   constructor(
     public containerElement: HTMLElement,
@@ -104,7 +103,14 @@ export class AnimationNode {
       this.currentTimeline = timeline;
       this.animating = true;
 
-      this.currentTimelineTimeout = setTimeout(() => {
+      this.childAnimations.forEach((node) => {
+        if (node && node.currentTimeline && !node.shouldIgnoreParentAnimation) {
+          node.currentTimeline.reset();
+        }
+      });
+
+      // clean up when the animation has finished
+      timeline.onFinish(() => {
         this.animating = false;
 
         if (this.currentState !== 'void') {
@@ -112,15 +118,7 @@ export class AnimationNode {
         }
 
         this.currentTimeline = undefined;
-        this.currentTimelineTimeout = undefined;
         this.shouldIgnoreParentAnimation = false;
-      }, timeline.computedDuration);
-
-      this.childAnimations.forEach((node) => {
-        if (node && node.currentTimeline && !node.shouldIgnoreParentAnimation) {
-          node.currentTimeline.reset();
-          clearTimeout(node.currentTimelineTimeout);
-        }
       });
 
       timeline.play();

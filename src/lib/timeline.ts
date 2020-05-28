@@ -2,9 +2,11 @@ import { AnimationMetadata } from './metadata';
 
 export class AnimationTimeline {
   private metadata: AnimationMetadata[] = [];
+  private completedCount = 0;
 
   public animating: boolean;
   public time = 0;
+  public endDelay = 0;
 
   constructor() {}
 
@@ -13,7 +15,7 @@ export class AnimationTimeline {
   }
 
   public addOffset(offset: number) {
-    if (!this.animating && this.canAnimate) {
+    if (this.canAnimate) {
       this.metadata.forEach((meta) => {
         meta.addOffset(offset);
       });
@@ -34,8 +36,6 @@ export class AnimationTimeline {
     }
 
     this.animating = true;
-
-    requestAnimationFrame(this.tick.bind(this));
   }
 
   public pause(): void {
@@ -65,11 +65,25 @@ export class AnimationTimeline {
   }
 
   public get computedDuration(): number {
-    return Math.max(
-      ...(this.metadata && this.metadata.length
-        ? this.metadata.map((m) => m.computedDuration)
-        : [])
+    return (
+      Math.max(
+        ...(this.metadata && this.metadata.length
+          ? this.metadata.map((m) => m.computedDuration)
+          : [0])
+      ) + this.endDelay
     );
+  }
+
+  public onFinish(callback: () => void) {
+    this.metadata.forEach((meta) => {
+      meta.onFinish(() => {
+        this.completedCount++;
+
+        if (this.completedCount === this.metadata.length) {
+          callback();
+        }
+      });
+    });
   }
 
   public reset() {
@@ -78,23 +92,10 @@ export class AnimationTimeline {
     }
 
     this.time = 0;
+    this.endDelay = 0;
 
     this.metadata.forEach((meta) => {
       meta.reset();
     });
-  }
-
-  private tick(): void {
-    if (this.animating && this.time <= this.computedDuration) {
-      this.time++;
-
-      this.metadata.forEach((meta) => {
-        meta.time = this.time;
-      });
-
-      requestAnimationFrame(this.tick.bind(this));
-    } else if (this.time > this.computedDuration) {
-      this.reset();
-    }
   }
 }

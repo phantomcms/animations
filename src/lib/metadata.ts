@@ -14,6 +14,9 @@ export class AnimationMetadata {
   private animation: Animation;
   private states: AnimationState[] = [];
 
+  private onFinishCallback: () => void;
+  private onCancelCallback: () => void;
+
   public animating: boolean;
   public time = 0;
 
@@ -48,6 +51,18 @@ export class AnimationMetadata {
         easing: this.easing,
         fill: 'forwards',
       });
+
+      this.animation.onfinish = () => {
+        this.onFinishCallback?.call(this);
+      };
+
+      this.animation.oncancel = () => {
+        this.onCancelCallback?.call(this);
+
+        if (!this.onCancelCallback) {
+          this.onFinishCallback?.call(this);
+        }
+      };
     }
 
     this.animating = true;
@@ -67,7 +82,7 @@ export class AnimationMetadata {
     throw new Error('Not yet implemented');
   }
 
-  get timing() {
+  public get timing() {
     return {
       duration: this.duration,
       delay: this.delay + this.additionalDelay,
@@ -76,7 +91,7 @@ export class AnimationMetadata {
     };
   }
 
-  get computedDuration() {
+  public get computedDuration() {
     return this.delay + this.additionalDelay + this.duration;
   }
 
@@ -105,5 +120,13 @@ export class AnimationMetadata {
     this.animation.cancel();
 
     this.target.removeAttribute('style');
+  }
+
+  public onFinish(callback: () => void) {
+    this.onFinishCallback = callback;
+  }
+
+  public onCancel(callback: () => void) {
+    this.onCancelCallback = callback;
   }
 }

@@ -1,5 +1,6 @@
 import { AnimationNode } from './node';
 import { AnimationMetadata, AnimationState } from './metadata';
+import { AnimationGroup } from './group';
 import { AnimationTimeline } from './timeline';
 
 // utils
@@ -31,7 +32,7 @@ export type AnimationStep = (
   node: AnimationNode,
   data: AnimationCompilationData,
   useElement?: HTMLElement
-) => any;
+) => AnimationMetadata | AnimationGroup | AnimationTimeline;
 
 export const trigger = (name: string, actions: AnimationStep[]) => {
   return (node: AnimationNode) => {
@@ -64,19 +65,33 @@ export const transition = (name: string, actions: AnimationStep[]) => {
     data.timeline = new AnimationTimeline();
 
     actions.forEach((action) => {
-      const animation = action(node, data);
+      const meta = action(node, data);
 
-      if (animation instanceof AnimationMetadata) {
-        // action returned a set of animation metadata, add it to the timeline
-        data.timeline.addMetadata(animation);
+      if (meta instanceof AnimationMetadata) {
+        // action returned an instance of animation metadata, add it to the timeline
+        data.timeline.addMetadata(meta);
+      } else if (meta instanceof AnimationGroup) {
+        // action returned a group of animation metadata, loop and add eaach to timeline
+        meta.flatMetadata.forEach((m) => {
+          if (m instanceof AnimationMetadata) {
+            data.timeline.addMetadata(m);
+          } else if (m instanceof AnimationTimeline) {
+            data.timeline.endDelay += m.computedDuration;
+          }
+        });
+      } else if (meta instanceof AnimationTimeline) {
+        data.timeline.endDelay += meta.computedDuration;
       }
     });
 
     node.addTransition(data.transition, data.timeline);
+
+    return void 0;
   };
 };
 
-export const state = (name: string, actions: AnimationStep[]) => {
+// TODO implement this
+const state = (name: string, actions: AnimationStep[]) => {
   return function state(node: AnimationNode, data: AnimationCompilationData) {
     // check if data.styles is empty
     if (data.styles && data.styles.length) {
@@ -103,6 +118,7 @@ export const state = (name: string, actions: AnimationStep[]) => {
 export const style = (styleData: AnimationState) => {
   return function style(_: AnimationNode, data: AnimationCompilationData) {
     data.styles.push(styleData);
+    return void 0;
   };
 };
 
@@ -155,12 +171,14 @@ export const query = (
   actions: AnimationStep[],
   options: { optional?: boolean; reverse?: boolean } = {}
 ) => {
-  return function query(node: AnimationNode, data: AnimationCompilationData) {
+  return function query(
+    node: AnimationNode
+  ): AnimationMetadata | AnimationGroup | AnimationTimeline {
     // parse query
     const resultQuery = parseQuery(queryString);
     const childData = new AnimationCompilationData();
 
-    let results = Array.from(
+    let results: HTMLElement[] = Array.from(
       node.containerElement.querySelectorAll(resultQuery)
     );
 
@@ -174,7 +192,9 @@ export const query = (
       results = results.reverse();
     }
 
-    results.forEach((element: HTMLElement) => {
+    let metadata = [];
+
+    for (let element of results) {
       const animationName = element.getAttribute('animation-name');
 
       if (animationName) {
@@ -183,28 +203,61 @@ export const query = (
 
         const childNode = node.childAnimations.get(animationName);
 
-        if (action.name === 'animateChild') {
-          action(childNode, undefined);
-        } else {
-          console.warn(
-            `Unsupported animation action: '${action.name}'. Animation elements only support the 'animateChild' action.`
-          );
+        if (childNode) {
+          if (action.name === 'animateChild') {
+            metadata.push(action(childNode, undefined));
+          } else {
+            console.warn(
+              `Unsupported animation action: '${action.name}'. Animation elements only support the 'animateChild' action.`
+            );
+          }
         }
       } else {
-        actions
-          .map((action) => action(node, childData, element))
-          .map((metadata) => {
-            if (metadata instanceof AnimationMetadata) {
-              data.timeline.addMetadata(metadata);
-            }
-          });
+        const actionResults = actions.map((action) => {
+          const meta = action(node, childData, element);
+
+          if (meta instanceof AnimationMetadata) {
+            return meta;
+          }
+        });
+
+        metadata = metadata.concat(actionResults.filter((x) => !!x));
       }
-    });
+    }
+
+    if (metadata.length === 1) {
+      return metadata[0];
+    } else {
+      return new AnimationGroup(...metadata);
+    }
   };
 };
 
-export const sequence = () => {
-  throw new Error('Not yet implemented');
+export const sequence = (actions: AnimationStep[]) => {
+  return function sequence(
+    node: AnimationNode,
+    data: AnimationCompilationData
+  ) {
+    let currentDelay = 0;
+
+    const results = actions.map((action) => {
+      const metadata = action(node, data);
+
+      if (metadata.addOffset) {
+        const offsetToAdd = currentDelay;
+        currentDelay += metadata.computedDuration;
+        metadata.addOffset(offsetToAdd);
+      }
+
+      return metadata;
+    });
+
+    if (results.length === 1) {
+      return results[0];
+    } else {
+      return new AnimationGroup(...results);
+    }
+  };
 };
 
 export const stagger = (
@@ -222,7 +275,10 @@ export const stagger = (
     const results = actions.map((action) => action(node, data, useElement));
 
     for (let meta of results) {
-      if (meta instanceof AnimationMetadata) {
+      if (
+        meta instanceof AnimationMetadata ||
+        meta instanceof AnimationTimeline
+      ) {
         meta.addOffset(data.currentStaggerOffset);
         // we can safely cast duration to a number here since we've parsed it above
         data.currentStaggerOffset += duration as number;
@@ -233,8 +289,11 @@ export const stagger = (
 };
 
 export const animateChild = () => {
-  return function animateChild(node: AnimationNode) {
+  return function animateChild(node: AnimationNode): AnimationTimeline {
     // we can safely cast delay to a number here since we've parsed it above
     node.ignoreParentAnimation();
+
+    // return the node's current timeline so that it can be manipulated as if it were metadata
+    return node.currentTimeline;
   };
 };
