@@ -1,6 +1,6 @@
 {
   "name": "@polaron/shift",
-  "version": "0.0.2-2",
+  "version": "0.0.2-3",
   "description": "A web component for animating DOM elements.",
   "main": "dist/index.js",
   "module": "dist/index.mjs",
