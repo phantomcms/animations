@@ -21,7 +21,7 @@
     "test.watch": "stencil test --spec --e2e --watchAll",
     "generate": "stencil generate",
     "postversion": "npm run build && cp package.json ./dist && cp README.md ./dist",
-    "release": "np --contents dist"
+    "release": "np --contents dist --no-tests"
   },
   "devDependencies": {
     "@stencil/core": "^1.12.2",
