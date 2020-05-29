@@ -7,6 +7,7 @@ export const config: Config = {
     {
       type: 'dist',
       esmLoaderPath: '../loader',
+      copy: [{ src: '../readme.md' }, { src: '../package.json' }],
     },
     {
       type: 'www',
