@@ -1,8 +1,14 @@
 import { Component, Host, Element, Prop, h, Watch } from '@stencil/core';
 import { AnimationNode } from './node';
 
+// load polyfill if required
+if (!document.body.animate) {
+  import('./polyfills/web-animations.min.js');
+}
+
 @Component({
   tag: 'animation-container',
+  assetsDir: './polyfills',
   shadow: true,
 })
 export class AnimationContainer {

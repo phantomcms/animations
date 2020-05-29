@@ -1,7 +1,7 @@
 {
-  "name": "animations",
+  "name": "@polaron/shift",
   "version": "0.0.1",
-  "description": "Stencil Component Starter",
+  "description": "A web component for animating DOM elements.",
   "main": "dist/index.js",
   "module": "dist/index.mjs",
   "es2015": "dist/esm/index.mjs",
@@ -19,12 +19,15 @@
     "start": "stencil build --dev --watch --serve",
     "test": "stencil test --spec --e2e",
     "test.watch": "stencil test --spec --e2e --watchAll",
-    "generate": "stencil generate"
+    "generate": "stencil generate",
+    "postversion": "npm run build && cp package.json ./dist && cp README.md ./dist",
+    "release": "np --contents dist"
   },
   "devDependencies": {
     "@stencil/core": "^1.12.2",
     "@types/node": "^14.0.5",
     "husky": "^4.2.5",
+    "np": "^6.2.3",
     "prettier": "^2.0.5",
     "pretty-quick": "^2.0.1"
   },
