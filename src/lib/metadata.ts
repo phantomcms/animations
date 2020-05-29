@@ -78,6 +78,8 @@ export class AnimationMetadata {
     this.animating = false;
   }
 
+  // TODO implement this
+  // @ts-ignore
   public seek(time: number) {
     throw new Error('Not yet implemented');
   }

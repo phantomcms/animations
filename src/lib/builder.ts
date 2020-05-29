@@ -91,6 +91,7 @@ export const transition = (name: string, actions: AnimationStep[]) => {
 };
 
 // TODO implement this
+// @ts-ignore
 const state = (name: string, actions: AnimationStep[]) => {
   return function state(node: AnimationNode, data: AnimationCompilationData) {
     // check if data.styles is empty
