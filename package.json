@@ -12,7 +12,8 @@
   "unpkg": "dist/animations/animations.js",
   "files": [
     "dist/",
-    "loader/"
+    "loader/",
+    "index.js"
   ],
   "scripts": {
     "build": "stencil build",
