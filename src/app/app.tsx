@@ -9,6 +9,7 @@ import {
   animateChild,
   sequence,
 } from '../lib';
+import { AnimationNode } from '../lib/node';
 
 const panel = trigger('panel', [
   transition(':enter', [
@@ -57,6 +58,14 @@ const banner = trigger('banner', [
   ]),
 ]);
 
+const onLoad = (node: AnimationNode) => {
+  // node.currentTimeline.pause();
+  // let time = 0;
+  // setInterval(() => {
+  //   node.seek(++time);
+  // });
+};
+
 @Component({
   tag: 'app-root',
   styleUrl: 'app.css',
@@ -82,7 +91,7 @@ export class AppRoot {
           Show banner
         </button>
         {this.showPanel && (
-          <animation-container animation={panel}>
+          <animation-container animation={panel} onAnimationLoad={onLoad}>
             <div class="panel">
               <div class="panel__inner">
                 <ul>

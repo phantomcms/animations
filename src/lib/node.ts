@@ -109,20 +109,37 @@ export class AnimationNode {
         }
       });
 
+      // TODO do we need this?
       // clean up when the animation has finished
-      timeline.onFinish(() => {
-        this.animating = false;
+      // timeline.onFinish(() => {
+      //   this.animating = false;
 
-        if (this.currentState !== 'void') {
-          this.currentTimeline.reset();
-        }
+      //   if (this.currentState !== 'void') {
+      //     this.currentTimeline.reset();
+      //   }
 
-        this.currentTimeline = undefined;
-        this.shouldIgnoreParentAnimation = false;
-      });
+      //   this.currentTimeline = undefined;
+      //   this.shouldIgnoreParentAnimation = false;
+      // });
 
       timeline.play();
     }
+  }
+
+  public play() {
+    if (this.currentTimeline) {
+      this.currentTimeline.play();
+    }
+  }
+
+  public pause() {
+    if (this.currentTimeline) {
+      this.currentTimeline.pause();
+    }
+  }
+
+  public seek(time: number) {
+    this.currentTimeline.seek(time);
   }
 
   private handleChild(event: CustomEvent<AnimationEvent>) {

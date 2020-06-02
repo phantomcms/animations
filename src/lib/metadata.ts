@@ -81,7 +81,12 @@ export class AnimationMetadata {
   // TODO implement this
   // @ts-ignore
   public seek(time: number) {
-    throw new Error('Not yet implemented');
+    if (!this.animation) {
+      this.play();
+      this.pause();
+    }
+
+    this.animation.currentTime = time;
   }
 
   public get timing() {
